@@ -40,3 +40,5 @@ cmake-build-*
 *.pt
 
 .vscode
+
+.DS_Store

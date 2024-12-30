@@ -1,3 +1,13 @@
+# YoloV8 Inference with TensorRT
+
+This modified version of [YOLOv8-TensorRT-CPP](https://github.com/cyrusbehr/YOLOv8-TensorRT-CPP/) provides a CLI interface for running inference with YOLOv8 using TensorRT 8.x, tested on Tegra X1 hardware.
+
+Currently, YOLOv8-seg does not work with TensorRT 8.x due to an unsupported operation:
+
+```
+[optimizer.cpp::computeCosts::2011] Error Code 10: Internal Error (Could not find any implementation for node /model.22/proto/upsample/ConvTranspose.)
+```
+
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
 [![LinkedIn][linkedin-shield]][linkedin-url]
@@ -35,13 +45,13 @@ Please feel free to reach out via [LinkedIn](https://www.linkedin.com/in/cyrus-b
 
 
 ### Getting Started
-This project demonstrates how to use the TensorRT C++ API to run GPU inference for YoloV8. 
+This project demonstrates how to use the TensorRT C++ API to run GPU inference for YoloV8.
 It makes use of my other project [tensorrt-cpp-api](https://github.com/cyrusbehr/tensorrt-cpp-api) to run inference behind the scene, so make sure you are familiar with that project.
 
 ### Prerequisites
 - Tested and working on Ubuntu 20.04 & 22.04 (Windows is **not** supported at this time)
 - Install CUDA, instructions [here](https://developer.nvidia.com/cuda-downloads).
-  - Recommended >= 12.0 
+  - Recommended >= 12.0
 - Install cudnn, instructions [here](https://docs.nvidia.com/deeplearning/cudnn/install-guide/index.html#download).
   - Recommended >= 8
 - `sudo apt install build-essential`
@@ -56,7 +66,7 @@ It makes use of my other project [tensorrt-cpp-api](https://github.com/cyrusbehr
 
 ### Installation
 - `git clone https://github.com/cyrusbehr/YOLOv8-TensorRT-CPP --recursive`
-- **Note:** Be sure to use the `--recursive` flag as this repo makes use of git submodules. 
+- **Note:** Be sure to use the `--recursive` flag as this repo makes use of git submodules.
 
 ### Converting Model from PyTorch to ONNX
 - Navigate to the [official YoloV8 repository](https://github.com/ultralytics/ultralytics) and download your desired version of the model (ex. YOLOv8x).
@@ -65,7 +75,7 @@ It makes use of my other project [tensorrt-cpp-api](https://github.com/cyrusbehr
 - Navigate to the `scripts/` directory and run the following:
 - ```python3 pytorch2onnx.py --pt_path <path to your pt file>```
 - After running this command, you should successfully have converted from PyTorch to ONNX.
-- **Note**: If converting the model using a different script, be sure that `end2end` is disabled. This flag will add bbox decoding and nms directly to the model, whereas my implementation does these steps external to the model using good old C++. 
+- **Note**: If converting the model using a different script, be sure that `end2end` is disabled. This flag will add bbox decoding and nms directly to the model, whereas my implementation does these steps external to the model using good old C++.
 
 ### Building the Project
 - `mkdir build`
@@ -75,7 +85,7 @@ It makes use of my other project [tensorrt-cpp-api](https://github.com/cyrusbehr
 
 ### Running the Executables
 - *Note*: the first time you run any of the scripts, it may take quite a long time (5 mins+) as TensorRT must generate an optimized TensorRT engine file from the onnx model. This is then saved to disk and loaded on subsequent runs.
-- *Note*: The executables all work out of the box with Ultralytic's pretrained object detection, segmentation, and pose estimation models. 
+- *Note*: The executables all work out of the box with Ultralytic's pretrained object detection, segmentation, and pose estimation models.
 - To run the benchmarking script, run: `./benchmark --model /path/to/your/onnx/model.onnx --input /path/to/your/benchmark/image.png`
 - To run inference on an image and save the annotated image to disk run: `./detect_object_image --model /path/to/your/onnx/model.onnx --input /path/to/your/image.jpg`
   - You can use the images in the `images/` directory for testing
@@ -92,12 +102,12 @@ It is advised to use 1K+ calibration images. To enable INT8 inference with the Y
 - If you get an "out of memory in function allocate" error, then you must reduce `Options.calibrationBatchSize` so that the entire batch can fit in your GPU memory.
 
 ### Benchmarking
-- Before running benchmarks, ensure your GPU is unloaded. 
-- Run the executable `benchmark` using the `/images/640_640.jpg` image. 
+- Before running benchmarks, ensure your GPU is unloaded.
+- Run the executable `benchmark` using the `/images/640_640.jpg` image.
 - If you'd like to benchmark each component (`preprocess`, `inference`, `postprocess`), recompile setting the `ENABLE_BENCHMARKS` flag to `ON`: `cmake -DENABLE_BENCHMARKS=ON ..`.
   - You can then rerun the executable
 
-Benchmarks run on NVIDIA GeForce RTX 3080 Laptop GPU, Intel(R) Core(TM) i7-10870H CPU @ 2.20GHz using 640x640 BGR image in GPU memory and FP16 precision. 
+Benchmarks run on NVIDIA GeForce RTX 3080 Laptop GPU, Intel(R) Core(TM) i7-10870H CPU @ 2.20GHz using 640x640 BGR image in GPU memory and FP16 precision.
 
 | Model        | Total Time | Preprocess Time | Inference Time | Postprocess Time |
 |--------------|------------|-----------------|----------------|------------------|
@@ -111,7 +121,7 @@ Benchmarks run on NVIDIA GeForce RTX 3080 Laptop GPU, Intel(R) Core(TM) i7-10870
 | yolov8x 	| FP16      	| 10.147 ms  	| 0.083 ms        	| 7.677 ms       	| 2.387 ms         	|
 | yolov8x 	| INT8      	| 7.32 ms    	| 0.103 ms        	| 4.698 ms       	| 2.519 ms         	|
 
-TODO: Need to improve postprocessing time using CUDA kernel. 
+TODO: Need to improve postprocessing time using CUDA kernel.
 
 ### How to debug
 - If you have issues creating the TensorRT engine file from the onnx model, navigate to `libs/tensorrt-cpp-api/src/engine.cpp` and change the log level by changing the severity level to `kVERBOSE` and rebuild and rerun. This should give you more information on where exactly the build process is failing.

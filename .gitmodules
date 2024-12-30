@@ -1,3 +1,7 @@
 [submodule "libs/tensorrt-cpp-api"]
 	path = libs/tensorrt-cpp-api
-	url = https://github.com/cyrusbehr/tensorrt-cpp-api.git
+	url = https://github.com/wanderingmeow/tensorrt-cpp-api-tx1.git
+	branch = cuda10.2-tensorrt8.2
+[submodule "cli"]
+	path = libs/cli
+	url = https://github.com/daniele77/cli.git

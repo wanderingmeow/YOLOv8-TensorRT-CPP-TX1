@@ -462,3 +462,169 @@ inline bool parseArgumentsVideo(int argc, char *argv[], YoloV8Config &config, st
 
     return true;
 }
+
+inline bool parseArgumentsInteractive(int argc, char *argv[], YoloV8Config &config, std::string &onnxModelPath, std::string &trtModelPath) {
+    for (int i = 1; i < argc; i++) {
+        std::string argument = argv[i];
+
+        if (argument.substr(0, 2) == "--") {
+            std::string flag = argument.substr(2);
+            std::string nextArgument;
+
+            if (flag == "model") {
+                if (!tryGetNextArgument(argc, argv, i, nextArgument, flag))
+                    return false;
+
+                if (!doesFileExist(nextArgument)) {
+                    std::cout << "Error: Unable to find model at path '" << nextArgument << "' for flag '" << flag << "'" << std::endl;
+                    return false;
+                }
+
+                onnxModelPath = nextArgument;
+            }
+
+            else if (flag == "trt_model") {
+                if (!tryGetNextArgument(argc, argv, i, nextArgument, flag))
+                    return false;
+
+                if (!doesFileExist(nextArgument)) {
+                    std::cout << "Error: Unable to find TensorRT engine at path '" << nextArgument << "' for flag '" << flag << "'" << std::endl;
+                    return false;
+                }
+
+                trtModelPath = nextArgument;
+            }
+
+            else if (flag == "prob-threshold") {
+                if (!tryGetNextArgument(argc, argv, i, nextArgument, flag))
+                    return false;
+
+                float value;
+                if (!tryParseFloat(nextArgument, value, flag))
+                    return false;
+
+                config.probabilityThreshold = value;
+            }
+
+            else if (flag == "nms-threshold") {
+                if (!tryGetNextArgument(argc, argv, i, nextArgument, flag))
+                    return false;
+
+                float value;
+                if (!tryParseFloat(nextArgument, value, flag))
+                    return false;
+
+                config.nmsThreshold = value;
+            }
+
+            else if (flag == "top-k") {
+                if (!tryGetNextArgument(argc, argv, i, nextArgument, flag))
+                    return false;
+
+                int value;
+                if (!tryParseInt(nextArgument, value, flag))
+                    return false;
+
+                config.topK = value;
+            }
+
+            else if (flag == "seg-channels") {
+                if (!tryGetNextArgument(argc, argv, i, nextArgument, flag))
+                    return false;
+
+                int value;
+                if (!tryParseInt(nextArgument, value, flag))
+                    return false;
+
+                config.segChannels = value;
+            }
+
+            else if (flag == "seg-h") {
+                if (!tryGetNextArgument(argc, argv, i, nextArgument, flag))
+                    return false;
+
+                int value;
+                if (!tryParseInt(nextArgument, value, flag))
+                    return false;
+
+                config.segH = value;
+            }
+
+            else if (flag == "precision") {
+                if (!tryGetNextArgument(argc, argv, i, nextArgument, flag))
+                    return false;
+
+                if (nextArgument == "FP32") {
+                    config.precision = Precision::FP32;
+                } else if (nextArgument == "FP16") {
+                    config.precision = Precision::FP16;
+                } else if (nextArgument == "INT8") {
+                    config.precision = Precision::INT8;
+                } else {
+                    std::cout << "Error: Unexpected precision value: " << nextArgument << ", options are FP32, FP16, INT8" << std::endl;
+                    return false;
+                }
+            }
+
+            else if (flag == "calibration-data") {
+                if (!tryGetNextArgument(argc, argv, i, nextArgument, flag))
+                    return false;
+
+                if (!doesFileExist(nextArgument)) {
+                    std::cout << "Error: Calibration data at specified path does not exist: " << nextArgument << std::endl;
+                    return false;
+                }
+
+                config.calibrationDataDirectory = nextArgument;
+            }
+
+            else if (flag == "seg-w") {
+                if (!tryGetNextArgument(argc, argv, i, nextArgument, flag))
+                    return false;
+
+                int value;
+                if (!tryParseInt(nextArgument, value, flag))
+                    return false;
+
+                config.segW = value;
+            }
+
+            else if (flag == "seg-threshold") {
+                if (!tryGetNextArgument(argc, argv, i, nextArgument, flag))
+                    return false;
+
+                float value;
+                if (!tryParseFloat(nextArgument, value, flag))
+                    return false;
+
+                config.segmentationThreshold = value;
+            }
+
+            else if (flag == "class-names") {
+                std::vector<std::string> values;
+                while (tryGetNextArgument(argc, argv, i, nextArgument, flag, false)) {
+                    values.push_back(nextArgument);
+                }
+
+                if (values.size() == 0) {
+                    std::cout << "Error: No arguments provided for flag '" << flag << "'" << std::endl;
+                    return false;
+                }
+
+                config.classNames = values;
+            }
+
+            else {
+                std::cout << "Error: Unknown flag '" << flag << "'" << std::endl;
+                showHelp(argv);
+                return false;
+            }
+        } else {
+            std::cout << "Error: Unknown argument '" << argument << "'" << std::endl;
+            showHelp(argv);
+            return false;
+        }
+    }
+
+    return true;
+}
